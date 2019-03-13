@@ -8,6 +8,7 @@ import Button from '@material-ui/core/Button';
 import Fab from '@material-ui/core/Fab';
 import PlayIcon from '@material-ui/icons/PlayArrow';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
+import RelexActions from '../../actions/RelaxActions'
 
 var fileReader
 
@@ -68,6 +69,10 @@ class TextInputArea extends React.Component {
     fileReader.readAsText(file)
   }
 
+  handleProcess = () => {
+    RelexActions.set_result_json(this.state.text)
+  }
+
 
   render() {
     const { classes } = this.props;
@@ -105,7 +110,7 @@ class TextInputArea extends React.Component {
              </Button>
           </label>
         </Paper>
-        <Fab variant="extended" color="secondary" aria-label="Run" className={classes.fab}>
+        <Fab variant="extended" color="secondary" aria-label="Run" className={classes.fab} onClick={this.handleProcess}>
           <PlayIcon className={classes.playIcon} />
           Run
         </Fab>

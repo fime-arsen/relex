@@ -38,13 +38,13 @@ class Result extends Component {
           const uniqueEntity = obj.unique_entities[entKey];
           const versions = uniqueEntity.versions
 
-          if(!versions) continue
+          if (!versions) continue
 
           for (var verKey in versions) {
-            if(versions.hasOwnProperty(verKey)) {
+            if (versions.hasOwnProperty(verKey)) {
               const version = versions[verKey]
 
-              if(!version.mentions || !version.mentions.length) continue
+              if (!version.mentions || !version.mentions.length) continue
 
               for (let i = 0; i < version.mentions.length; i++) {
                 mentions.push(version.mentions[i])
@@ -77,17 +77,21 @@ class Result extends Component {
               nodes: [{
                 id: '0',
                 label: info.participant_a,
-                position: {x: 50, y: 25},
+                position: {x: 250, y: 25},
               },
               {
                 id: '1',
                 label: info.participant_b,
-                position: {x: 300, y: 50},
+                position: {x: 150, y: 90},
               }],
               edges: [{
                 source: '0',
                 target: '1'
-              }]
+              }],
+              isStatic: false, // if true, can't change nodes position by dragging
+              isVertical: true, // if true, all edges draw for vertical graph
+              isDirected: true, // if false, edges will change connection position depending on source and target nodes position relative to each other
+
             }}
             onChange={(newGraphJSON) => {}}
             shouldNodeFitContent={true}
