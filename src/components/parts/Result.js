@@ -4,8 +4,36 @@ import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
-import Graph from 'react-json-graph';
+import { Graph } from 'react-d3-graph';
 import ReactHtmlParser from 'react-html-parser';
+
+// graph payload (with minimalist structure)
+// const data = {
+//     nodes: [{ id: "0", label: 0 }, { id: 'Sally' }, { id: 'Alice' }],
+//     links: [{ source: 0, target: 'Sally' }, { source: 0, target: 'Alice' }, { source: 'Alice', target: 0 }]
+// };
+const myConfig = {
+    width: 600,
+    nodeHighlightBehavior: true,
+    directed: true,
+    d3: {
+       alphaTarget: 0.5,
+       gravity: -200,
+   },
+
+    node: {
+        color: 'lightblue',
+        size: 500,
+        highlightStrokeColor: 'blue',
+        fontSize: 14,
+    },
+    link: {
+        color: 'lightgray',
+        strokeWidth: 3,
+        // type: "CURVE_SMOOTH"
+    }
+};
+
 
 const styles = theme => ({
   paper: {
@@ -65,41 +93,36 @@ class Result extends Component {
   }
 
   generateGraphRelations = (json) => {
-    let graphs = []
+    var nodes = []
+    var links = []
+    var uniqueLinks = []
+    var uniqueNodes = []
+    const uniqueArray = a => [...new Set(a.map(o => JSON.stringify(o)))].map(s => JSON.parse(s));
+
 
     json.forEach((obj, index_obj) => {
       obj.extracted_information.forEach((info, index_info) => {
-        graphs.push(
-          <Graph
-            key={"gr_"+index_obj+"_"+index_info}
-            height={150}
-            json={{
-              nodes: [{
-                id: '0',
-                label: info.participant_a,
-                position: {x: 250, y: 25},
-              },
-              {
-                id: '1',
-                label: info.participant_b,
-                position: {x: 150, y: 90},
-              }],
-              edges: [{
-                source: '0',
-                target: '1'
-              }],
-              isStatic: false, // if true, can't change nodes position by dragging
-              isVertical: true, // if true, all edges draw for vertical graph
-              isDirected: true, // if false, edges will change connection position depending on source and target nodes position relative to each other
 
-            }}
-            onChange={(newGraphJSON) => {}}
-            shouldNodeFitContent={true}
-          />
-        )
+        nodes.push({id: info.participant_a})
+        nodes.push({id: info.participant_b})
+        links.push({source: info.participant_a, target: info.participant_b})
       })
     })
-    return graphs
+
+    uniqueNodes = uniqueArray(nodes)
+    uniqueLinks = uniqueArray(links)
+
+    return <Graph
+                id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
+                config={myConfig}
+                key="graph-id"
+                data={{
+                  nodes: uniqueNodes,
+                  links: uniqueLinks
+                }}
+                onChange={(newGraphJSON) => {}}
+                shouldNodeFitContent={true}
+              />
   }
 
   render() {
