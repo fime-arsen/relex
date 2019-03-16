@@ -111,7 +111,9 @@ class Result extends Component {
 
     uniqueNodes = uniqueArray(nodes)
     uniqueLinks = uniqueArray(links)
-
+    if (uniqueNodes === undefined || uniqueNodes.length == 0) {      console.log("AAAA")
+      return <Grid/>
+    }
     return <Graph
                 id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
                 config={myConfig}
