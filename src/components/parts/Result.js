@@ -5,14 +5,23 @@ import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import { Graph } from 'react-d3-graph';
-import ReactHtmlParser from 'react-html-parser';
 
-// graph payload (with minimalist structure)
-// const data = {
-//     nodes: [{ id: "0", label: 0 }, { id: 'Sally' }, { id: 'Alice' }],
-//     links: [{ source: 0, target: 'Sally' }, { source: 0, target: 'Alice' }, { source: 'Alice', target: 0 }]
-// };
-const myConfig = {
+var connections = []
+
+const styles = theme => ({
+  paper: {
+    padding: theme.spacing.unit * 2,
+    margin: theme.spacing.unit * 2,
+    height: 500,
+    overflowY: 'scroll',
+    overflowX: 'hidden'
+  },
+  title: {
+    margin: theme.spacing.unit*2
+  }
+});
+
+const graphConfig = {
     width: 600,
     nodeHighlightBehavior: true,
     directed: true,
@@ -34,20 +43,6 @@ const myConfig = {
     }
 };
 
-
-const styles = theme => ({
-  paper: {
-    padding: theme.spacing.unit * 2,
-    margin: theme.spacing.unit * 2,
-    height: 500,
-    overflowY: 'scroll',
-    overflowX: 'hidden'
-  },
-  title: {
-    margin: theme.spacing.unit*2
-  }
-});
-
 function Comparator(a, b) {
    if (a[0] > b[0]) return -1;
    if (a[0] < b[0]) return 1;
@@ -55,6 +50,69 @@ function Comparator(a, b) {
  }
 
 class Result extends Component {
+  state = {
+    selNode: null
+  }
+
+  hoverOn = (event) => {
+    let mouseOn = event.target.textContent
+
+    this.refs['graph'].onMouseOverNode(mouseOn)
+    // this.refs['graph'].onChange()
+
+    this.setState({selNode: mouseOn})
+
+    connections.forEach(conn => {
+      if(mouseOn === conn.source) {
+        let element = this.refs[conn.target]
+        element.classList.add("bindText")
+      }
+      else if (mouseOn === conn.target) {
+        let element = this.refs[conn.source]
+        element.classList.add("bindText")
+      }
+    })
+  }
+
+  hoverOff = (event) => {
+    let mouseOff = event.target.textContent
+
+    connections.forEach(conn => {
+      if(mouseOff === conn.source) {
+        let element = this.refs[conn.target]
+        element.classList.remove("bindText")
+      }
+      else if (mouseOff === conn.target) {
+        let element = this.refs[conn.source]
+        element.classList.remove("bindText")
+      }
+    })
+  }
+
+  recHighlight = (text, mentions) => {
+    if (!mentions.length) return (text)
+
+    let nextMention = mentions[0]
+
+    if (nextMention) {
+      mentions.shift()
+    }
+
+    return (
+      <div key={"sen"+mentions.length}>
+        {this.recHighlight(text.substring(0, nextMention[0]), mentions)}
+        <span
+          className={"markedText"}
+          onMouseEnter={this.hoverOn}
+          onMouseLeave={this.hoverOff}
+          ref={text.substring(nextMention[0], nextMention[1]+1)}
+        >
+          {text.substring(nextMention[0], nextMention[1]+1)}
+        </span>
+        {text.substring(nextMention[1]+1)}
+      </div>
+    )
+  }
 
   generateHighlightedText = (json) => {
     let text = []
@@ -83,10 +141,7 @@ class Result extends Component {
       }
 
       mentions = mentions.sort(Comparator)
-      mentions.forEach(mention => {
-        obj.text = obj.text.substring(0, mention[0]) + "<mark>" + obj.text.substring(mention[0], mention[1]+1) + "</mark>" +  obj.text.substring(mention[1]+1);
-      })
-      text.push(ReactHtmlParser(obj.text))
+      text.push(this.recHighlight(obj.text, mentions))
     })
 
     return text
@@ -111,18 +166,22 @@ class Result extends Component {
 
     uniqueNodes = uniqueArray(nodes)
     uniqueLinks = uniqueArray(links)
-    if (uniqueNodes === undefined || uniqueNodes.length == 0) {      console.log("AAAA")
+    if (uniqueNodes === undefined || uniqueNodes.length === 0) {
       return <Grid/>
     }
+    connections = uniqueLinks
+
     return <Graph
                 id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
-                config={myConfig}
+                config={graphConfig}
                 key="graph-id"
+                ref="graph"
                 data={{
                   nodes: uniqueNodes,
                   links: uniqueLinks
                 }}
-                onChange={(newGraphJSON) => {}}
+                // onChange={(newGraphJSON) => {console.log("ASDSADA", newGraphJSON)}}
+                onMouseOverNode={(node) => console.log("MouseOverNode", node)}
                 shouldNodeFitContent={true}
               />
   }

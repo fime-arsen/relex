@@ -12,3 +12,13 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.markedText {
+  background-color: yellow;
+  cursor: pointer
+}
+
+.bindText, .markedText:hover {
+  background-color: lightgreen;
+  font-weight: bold
+}
