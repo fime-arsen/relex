@@ -13,32 +13,40 @@ const styles = theme => ({
     padding: theme.spacing.unit * 2,
     margin: theme.spacing.unit * 2,
     height: 500,
-    overflowY: 'scroll',
-    overflowX: 'hidden'
+    overflowX: 'hidden',
+    overflowY: 'hidden'
+  },
+  textArea: {
+    overflowY: 'scroll'
   },
   title: {
     margin: theme.spacing.unit*2
   }
 });
 
-const graphConfig = {
-    width: 600,
+let graphConfig = {
+    width: 1200,
+    height: 1200,
     nodeHighlightBehavior: true,
     directed: true,
     d3: {
-       alphaTarget: 0.5,
-       gravity: -200,
-   },
-
+      gravity: -200
+    },
     node: {
-        color: 'lightblue',
-        size: 500,
-        highlightStrokeColor: 'blue',
+        size: 100,
+        color: 'yellow',
+        strokeColor: 'gray',
+        highlightStrokeColor: 'deepskyblue',
         fontSize: 14,
+        highlightFontSize: 18,
+        highlightFontWeight: 'bold',
+        highlightColor: 'deepskyblue',
+
     },
     link: {
-        color: 'lightgray',
-        strokeWidth: 3,
+        color: 'gray',
+        strokeWidth: 2,
+        highlightColor: "deepskyblue",
         // type: "CURVE_SMOOTH"
     }
 };
@@ -56,11 +64,9 @@ class Result extends Component {
 
   hoverOn = (event) => {
     let mouseOn = event.target.textContent
+    let graph = this.refs['graph']
 
-    this.refs['graph'].onMouseOverNode(mouseOn)
-    // this.refs['graph'].onChange()
-
-    this.setState({selNode: mouseOn})
+    graph.onMouseOverNode(mouseOn)
 
     connections.forEach(conn => {
       if(mouseOn === conn.source) {
@@ -72,10 +78,14 @@ class Result extends Component {
         element.classList.add("bindText")
       }
     })
+
   }
 
   hoverOff = (event) => {
     let mouseOff = event.target.textContent
+    let graph = this.refs['graph']
+
+    graph.onMouseOutNode(mouseOff)
 
     connections.forEach(conn => {
       if(mouseOff === conn.source) {
@@ -99,10 +109,11 @@ class Result extends Component {
     }
 
     return (
-      <div key={"sen"+mentions.length}>
+      <div key={"sen"+mentions.length} style={{display: 'inline'}}>
         {this.recHighlight(text.substring(0, nextMention[0]), mentions)}
         <span
           className={"markedText"}
+          style={{display: 'inline'}}
           onMouseEnter={this.hoverOn}
           onMouseLeave={this.hoverOff}
           ref={text.substring(nextMention[0], nextMention[1]+1)}
@@ -167,22 +178,21 @@ class Result extends Component {
     uniqueNodes = uniqueArray(nodes)
     uniqueLinks = uniqueArray(links)
     if (uniqueNodes === undefined || uniqueNodes.length === 0) {
-      return <Grid/>
+      return null
     }
     connections = uniqueLinks
 
-    return <Graph
+    return    <Graph
                 id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
                 config={graphConfig}
                 key="graph-id"
                 ref="graph"
                 data={{
                   nodes: uniqueNodes,
-                  links: uniqueLinks
+                  links: uniqueLinks,
+                  focusedNodeId: this.state.selNode,
                 }}
-                // onChange={(newGraphJSON) => {console.log("ASDSADA", newGraphJSON)}}
-                onMouseOverNode={(node) => console.log("MouseOverNode", node)}
-                shouldNodeFitContent={true}
+                shouldNodeFitContent={false}
               />
   }
 
@@ -195,7 +205,7 @@ class Result extends Component {
             <Typography variant="h5" className={classes.title}>
               Highlighted output
             </Typography>
-            <Paper className={classes.paper} elevation={1}>
+            <Paper className={[classes.paper, classes.textArea]} elevation={1}>
               <Typography variant="body2">
                 {this.generateHighlightedText(json)}
               </Typography>

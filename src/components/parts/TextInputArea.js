@@ -4,6 +4,8 @@ import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
+import Fade from '@material-ui/core/Fade';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Button from '@material-ui/core/Button';
 import Fab from '@material-ui/core/Fab';
 import PlayIcon from '@material-ui/icons/PlayArrow';
@@ -25,6 +27,11 @@ const styles = theme => ({
   textField: {
    marginLeft: theme.spacing.unit,
    marginRight: theme.spacing.unit,
+  },
+  actionArea: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
   },
   input: {
     display: 'none',
@@ -110,10 +117,18 @@ class TextInputArea extends React.Component {
              </Button>
           </label>
         </Paper>
-        <Fab variant="extended" color="secondary" aria-label="Run" className={classes.fab} onClick={this.handleProcess}>
-          <PlayIcon className={classes.playIcon} />
-          Run
-        </Fab>
+        <div className={classes.actionArea}>
+          <Fade
+            in={this.props.isLoading}
+            unmountOnExit
+          >
+            <CircularProgress color="secondary"/>
+          </Fade>
+          <Fab variant="extended" disabled={(this.props.isLoading || this.state.text==='') ? true : false} color="secondary" aria-label="Run" className={classes.fab} onClick={this.handleProcess}>
+            {this.props.isLoading ? null : <PlayIcon className={classes.playIcon} />}
+            {this.props.isLoading ? "Processing" : "Run"}
+          </Fab>
+        </div>
       </div>
     );
   }

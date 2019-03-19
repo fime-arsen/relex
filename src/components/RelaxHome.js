@@ -15,7 +15,8 @@ class RelaxHome extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      result_json: RelaxStore.get_result_json()
+      result_json: RelaxStore.get_result_json(),
+      is_loading: RelaxStore.get_loading_status()
     }
   }
 
@@ -33,14 +34,19 @@ class RelaxHome extends Component {
 
     return (
       <div className={classes.root}>
-        <TextInputArea />
+        <TextInputArea isLoading={this.state.is_loading}/>
         <Result json={this.state.result_json} />
       </div>
     );
   }
 
   _onChange() {
-      this.setState({result_json: RelaxStore.get_result_json()});
+      this.setState(
+        {
+          result_json: RelaxStore.get_result_json(),
+          is_loading: RelaxStore.get_loading_status()
+        }
+      );
   }
 }
 

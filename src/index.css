@@ -15,10 +15,13 @@ code {
 
 .markedText {
   background-color: yellow;
-  cursor: pointer
+  cursor: pointer;
 }
 
-.bindText, .markedText:hover {
-  background-color: lightgreen;
-  font-weight: bold
+.markedText:hover {
+  background-color: deepskyblue;
+}
+
+.bindText {
+  background-color: orangered;
 }

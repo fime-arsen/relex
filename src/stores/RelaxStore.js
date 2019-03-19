@@ -5,7 +5,8 @@ import RelaxConstants from '../constants/RelaxConstants';
 const CHANGE = 'CHANGE';
 
 let _relaxState = {
-  result_json: []
+  is_loading: false,
+  result_json: [],
 }
 
 class RelaxStore extends EventEmitter {
@@ -22,6 +23,9 @@ class RelaxStore extends EventEmitter {
       case RelaxConstants.SET_RESULT_JSON:
         this.set_result_json(action.data);
         break;
+      case RelaxConstants.SET_LOADING:
+        this.set_loading(action.status);
+        break;
       default:
         console.log("Unhandled case");
         break;
@@ -33,8 +37,16 @@ class RelaxStore extends EventEmitter {
     _relaxState.result_json = data;
   }
 
-  get_result_json(data) {
+  get_result_json() {
     return _relaxState.result_json;
+  }
+
+  set_loading(status) {
+    _relaxState.is_loading=status
+  }
+
+  get_loading_status() {
+    return _relaxState.is_loading;
   }
 }
 
