@@ -1,0 +1,40 @@
+version: '2.3'
+services:
+    backend:
+        build: backend
+        runtime: nvidia
+        restart: always
+        container_name: backend
+        hostname: backend
+        stdin_open: true
+        tty: true
+        working_dir: /backend
+        environment:
+            - FLASK_APP=server.py
+            - FLASK_ENV=development
+            - LC_ALL=C.UTF-8
+            - LANG=C.UTF-8
+        entrypoint: flask run --host=0.0.0.0
+        expose:
+            - "5000"
+    frontend:
+        build: ./frontend
+        restart: always
+        container_name: frontend
+        hostname: frontend
+        expose:
+            - "3000"
+        stdin_open: true
+        tty: true
+        working_dir: /frontend
+        entrypoint: npm start --host=0.0.0.0
+    nginx:
+        build: nginx
+        restart: always
+        container_name: nginx
+        hostname: nginx
+        ports:
+            - "80:80"
+            - "443:443"
+        stdin_open: true
+        tty: true

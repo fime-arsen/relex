@@ -1,4 +1,0 @@
-export default {
-    SET_RESULT_JSON: 'SET_RESULT_JSON',
-    SET_LOADING: 'SET_LOADING'
-}
