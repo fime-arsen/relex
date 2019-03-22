@@ -6,7 +6,7 @@ from flask_cors import CORS
 from werkzeug.exceptions import BadRequest
 from nltk import sent_tokenize
 
-BASE_DIR = "/relex/Relation-extraction-pipeline/baselines/SciERC/"
+BASE_DIR = "/backend/Relation-extraction-pipeline/baselines/SciERC/"
 
 app = Flask(__name__)
 CORS(app)

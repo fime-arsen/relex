@@ -1,8 +1,8 @@
 #!/bin/bash
 
-cd /relex/Relation-extraction-pipeline/baselines/SciERC
+cd /backend/Relation-extraction-pipeline/baselines/SciERC
 rm -f *.json *.hdf5 *.whitespace
-cd /relex/Relation-extraction-pipeline/baselines/SciERC/scierc/
+cd /backend/Relation-extraction-pipeline/baselines/SciERC/scierc/
 echo "\n\n**********  prepare_input.py  ***************\n\n"
 python ../prepare_input.py --input ../1.0alpha4.test.txt --text_mode --output ../1.0alpha4.test.scierc.json --output_whitespace ../1.0alpha4.test.scierc.whitespace
 echo "\n\n**********  generate_elmo.py  ***************\n\n"
