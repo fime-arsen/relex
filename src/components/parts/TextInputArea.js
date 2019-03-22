@@ -10,6 +10,7 @@ import Button from '@material-ui/core/Button';
 import Fab from '@material-ui/core/Fab';
 import PlayIcon from '@material-ui/icons/PlayArrow';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
+import AddIcon from '@material-ui/icons/Add';
 import RelexActions from '../../actions/RelaxActions'
 
 var fileReader
@@ -28,16 +29,15 @@ const styles = theme => ({
    marginLeft: theme.spacing.unit,
    marginRight: theme.spacing.unit,
   },
-  actionArea: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
   input: {
     display: 'none',
   },
   button: {
     margin: theme.spacing.unit * 2,
+  },
+  buttonAdd: {
+    display: 'flex',
+    alignItems: 'center'
   },
   fab: {
     margin: theme.spacing.unit,
@@ -57,43 +57,28 @@ class TextInputArea extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      text: ''
+      textBoxCount: 1,
+      text: {}
     }
   }
 
-  handleTextChange = (event) => {
-    this.setState({text: event.target.value})
-  }
-
-  handleFileRead = (event) => {
-    const content = fileReader.result;
-    this.setState({text: content})
-  }
-
-  handleFileChoosen = (file) => {
-    fileReader = new FileReader();
-    fileReader.onloadend = this.handleFileRead;
-    fileReader.readAsText(file)
-  }
-
-  handleProcess = () => {
-    RelexActions.set_result_json(this.state.text)
-  }
-
-
-  render() {
+  generateTextbox = () => {
     const { classes } = this.props;
-    const { text } = this.state;
+    let { text, textBoxCount } = this.state;
 
-    return (
-      <div style={{textAlign: 'center'}}>
+    let textBoxes = []
+
+    for (let id=0; id < textBoxCount; id++) {
+      const elId = "input-text-" + id
+      textBoxes.push(
         <Paper className={classes.root} elevation={1}>
           <TextField
-            id="outlined-multiline-flexible"
+            id={elId}
+            name={elId}
             fullWidth
             multiline
             rows="6"
-            value={text}
+            value={text[elId]}
             placeholder="Type text here to process and get binds"
             onChange={this.handleTextChange}
             className={classes.textField}
@@ -106,24 +91,77 @@ class TextInputArea extends React.Component {
           <input
             accept="text/plain"
             className={classes.input}
-            id="button-file"
+            id={"upload-text-" + id}
+            name={elId}
             type="file"
-            onChange={event => this.handleFileChoosen(event.target.files[0])}
+            onChange={event => this.handleFileChoosen(event.target.files[0], event.target.name)}
           />
-          <label htmlFor="button-file">
-            <Button variant="outlined" component="span" className={classes.button}>
+          <label htmlFor={"upload-text-" + id}>
+            <Button variant="outlined" component="span" className={classes.button} >
                Upload
                <CloudUploadIcon className={classes.rightIcon} />
              </Button>
           </label>
         </Paper>
+      )
+    }
+
+    return textBoxes
+  }
+
+  handleTextChange = (event) => {
+    const key = event.target.name
+
+    this.setState({
+      text: {
+        ...this.state.text,
+        [key]: event.target.value
+      }
+    })
+  }
+
+  handleFileChoosen = (file, name) => {
+    fileReader = new FileReader();
+    fileReader.onloadend = event => {
+      this.setState({
+        text: {
+          ...this.state.text,
+          [name]: fileReader.result
+        }
+      })
+    }
+    fileReader.readAsText(file)
+  }
+
+  handleProcess = () => {
+    const text = Object.values(this.state.text).join(' ')
+    RelexActions.set_result_json(text)
+  }
+
+
+  render() {
+    const { classes } = this.props;
+    const { textBoxCount } = this.state
+
+    return (
+      <div style={{textAlign: 'center'}}>
+        {this.generateTextbox()}
         <div className={classes.actionArea}>
-          <Fade
-            in={this.props.isLoading}
-            unmountOnExit
-          >
-            <CircularProgress color="secondary"/>
-          </Fade>
+          <Button
+            color="secondary"
+            className={[classes.button, classes.buttonAdd]}
+            onClick={() => {this.setState({textBoxCount: textBoxCount+1})}}>
+              <AddIcon className={classes.leftIcon} />
+              Add another
+          </Button>
+          <div className={classes.fab}>
+            <Fade
+              in={this.props.isLoading}
+              unmountOnExit
+            >
+              <CircularProgress color="secondary"/>
+            </Fade>
+          </div>
           <Fab variant="extended" disabled={(this.props.isLoading || this.state.text==='') ? true : false} color="secondary" aria-label="Run" className={classes.fab} onClick={this.handleProcess}>
             {this.props.isLoading ? null : <PlayIcon className={classes.playIcon} />}
             {this.props.isLoading ? "Processing" : "Run"}
