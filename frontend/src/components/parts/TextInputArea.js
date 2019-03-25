@@ -115,13 +115,14 @@ class TextInputArea extends React.Component {
 
     return (
       <div className={classes.actionArea}>
+        {textBoxCount >= 1 && textBoxCount < 3 ?
         <Button
           color="primary"
           className={[classes.button, classes.buttonAdd]}
           onClick={() => {this.setState({textBoxCount: textBoxCount+1})}}>
             <AddIcon className={classes.leftIcon} />
             Add more
-        </Button>
+        </Button> : null }
         {textBoxCount !== 1 ?
           <Button
             color="secondary"
