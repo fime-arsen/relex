@@ -11,6 +11,7 @@ import Fab from '@material-ui/core/Fab';
 import PlayIcon from '@material-ui/icons/PlayArrow';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import AddIcon from '@material-ui/icons/Add';
+import DeleteIcon from '@material-ui/icons/Delete';
 import RelexActions from '../../actions/RelaxActions'
 
 var fileReader
@@ -32,12 +33,11 @@ const styles = theme => ({
   input: {
     display: 'none',
   },
+  actionArea: {
+    flexDirection: 'row',
+  },
   button: {
     margin: theme.spacing.unit * 2,
-  },
-  buttonAdd: {
-    display: 'flex',
-    alignItems: 'center'
   },
   fab: {
     margin: theme.spacing.unit,
@@ -64,7 +64,7 @@ class TextInputArea extends React.Component {
 
   generateTextbox = () => {
     const { classes } = this.props;
-    let { text, textBoxCount } = this.state;
+    const { text, textBoxCount } = this.state;
 
     let textBoxes = []
 
@@ -109,6 +109,39 @@ class TextInputArea extends React.Component {
     return textBoxes
   }
 
+  generateActionButtons = () => {
+    const { classes } = this.props;
+    const { textBoxCount } = this.state;
+
+    return (
+      <div className={classes.actionArea}>
+        <Button
+          color="primary"
+          className={[classes.button, classes.buttonAdd]}
+          onClick={() => {this.setState({textBoxCount: textBoxCount+1})}}>
+            <AddIcon className={classes.leftIcon} />
+            Add more
+        </Button>
+        {textBoxCount !== 1 ?
+          <Button
+            color="secondary"
+            className={[classes.button, classes.buttonAdd]}
+            onClick={() => {
+              const elementToDelete = 'input-text-' + (textBoxCount-1)
+              delete this.state.text[elementToDelete]
+              this.setState({
+                ...this.state,
+                textBoxCount: textBoxCount-1
+              })
+            }
+            }>
+              <DeleteIcon className={classes.leftIcon} />
+              Remove
+          </Button> : null}
+      </div>
+    )
+  }
+
   handleTextChange = (event) => {
     const key = event.target.name
 
@@ -141,19 +174,12 @@ class TextInputArea extends React.Component {
 
   render() {
     const { classes } = this.props;
-    const { textBoxCount } = this.state
 
     return (
-      <div style={{textAlign: 'center'}}>
+      <div>
         {this.generateTextbox()}
-        <div className={classes.actionArea}>
-          <Button
-            color="secondary"
-            className={[classes.button, classes.buttonAdd]}
-            onClick={() => {this.setState({textBoxCount: textBoxCount+1})}}>
-              <AddIcon className={classes.leftIcon} />
-              Add another
-          </Button>
+        {this.generateActionButtons()}
+        <div style={{textAlign: 'center'}}>
           <div className={classes.fab}>
             <Fade
               in={this.props.isLoading}
