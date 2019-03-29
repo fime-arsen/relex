@@ -4,7 +4,7 @@ import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
-import { Graph } from 'react-d3-graph';
+import {InteractiveForceGraph, ForceGraphNode, ForceGraphArrowLink} from 'react-vis-force';
 
 var connections = []
 
@@ -24,33 +24,6 @@ const styles = theme => ({
   }
 });
 
-let graphConfig = {
-    width: 1200,
-    height: 1200,
-    nodeHighlightBehavior: true,
-    directed: true,
-    d3: {
-      gravity: -200
-    },
-    node: {
-        size: 100,
-        color: 'yellow',
-        strokeColor: 'gray',
-        highlightStrokeColor: 'deepskyblue',
-        fontSize: 14,
-        highlightFontSize: 18,
-        highlightFontWeight: 'bold',
-        highlightColor: 'deepskyblue',
-
-    },
-    link: {
-        color: 'gray',
-        strokeWidth: 2,
-        highlightColor: "deepskyblue",
-        // type: "CURVE_SMOOTH"
-    }
-};
-
 function Comparator(a, b) {
    if (a[0] > b[0]) return -1;
    if (a[0] < b[0]) return 1;
@@ -66,7 +39,7 @@ class Result extends Component {
     let mouseOn = event.target.textContent
     let graph = this.refs['graph']
 
-    graph.onMouseOverNode(mouseOn)
+    graph.setState({'selectedNode': {id: mouseOn}})
 
     connections.forEach(conn => {
       if(mouseOn === conn.source) {
@@ -85,7 +58,7 @@ class Result extends Component {
     let mouseOff = event.target.textContent
     let graph = this.refs['graph']
 
-    graph.onMouseOutNode(mouseOff)
+    graph.setState({'selectedNode': null})
 
     connections.forEach(conn => {
       if(mouseOff === conn.source) {
@@ -169,9 +142,9 @@ class Result extends Component {
     json.forEach((obj, index_obj) => {
       obj.extracted_information.forEach((info, index_info) => {
 
-        nodes.push({id: info.participant_a})
-        nodes.push({id: info.participant_b})
-        links.push({source: info.participant_a, target: info.participant_b})
+        nodes.push({id: info.participant_a, label: 'source'})
+        nodes.push({id: info.participant_b, label: 'target'})
+        links.push({source: info.participant_a, target: info.participant_b, value: index_obj})
       })
     })
 
@@ -182,18 +155,32 @@ class Result extends Component {
     }
     connections = uniqueLinks
 
-    return    <Graph
-                id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
-                config={graphConfig}
-                key="graph-id"
-                ref="graph"
-                data={{
-                  nodes: uniqueNodes,
-                  links: uniqueLinks,
-                  focusedNodeId: this.state.selNode,
-                }}
-                shouldNodeFitContent={false}
-              />
+    let forceGraphNodes = []
+    for (let i = 0; i<uniqueNodes.length; i++) {
+      let color = uniqueNodes[i].label === "source" ? "deepskyblue" : "orangered"
+      forceGraphNodes.push(<ForceGraphNode node={uniqueNodes[i]} fill={color} />)
+    }
+
+    let forceGraphLinks = []
+    for (let i = 0; i<uniqueLinks.length; i++) {
+      forceGraphLinks.push(<ForceGraphArrowLink link={uniqueLinks[i]} />)
+    }
+
+    return  <InteractiveForceGraph
+              simulationOptions={{ height: 500, width: 800, alpha: 1,strength: {
+                  charge: -200
+                } }}
+              labelAttr="id"
+              showLabels
+              onSelectNode={(node) => console.log(node)}
+              highlightDependencies
+              zoomOptions={{ minScale: 0.1, maxScale: 5 }}
+              zoom
+              ref='graph'
+            >
+              {forceGraphNodes}
+              {forceGraphLinks}
+            </InteractiveForceGraph>
   }
 
   render() {
