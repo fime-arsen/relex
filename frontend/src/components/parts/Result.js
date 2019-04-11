@@ -36,19 +36,24 @@ class Result extends Component {
   }
 
   hoverOn = (event) => {
+    this.deSelectNode(null, this.state.selNode)
+
     let mouseOn = event.target.textContent
     let graph = this.refs['graph']
+    let node = this.refs['node_' + mouseOn]
 
     graph.setState({'selectedNode': {id: mouseOn}})
+
+    if (typeof node !== 'undefined') this.zoomToNode(node.props)
 
     connections.forEach(conn => {
       if(mouseOn === conn.source) {
         let element = this.refs[conn.target]
-        element.classList.add("bindText")
+        if (typeof element !== 'undefined') element.classList.add("bindText")
       }
       else if (mouseOn === conn.target) {
         let element = this.refs[conn.source]
-        element.classList.add("bindText")
+        if (typeof element !== 'undefined') element.classList.add("bindText")
       }
     })
 
@@ -59,17 +64,110 @@ class Result extends Component {
     let graph = this.refs['graph']
 
     graph.setState({'selectedNode': null})
+    this.resetZoom()
 
     connections.forEach(conn => {
       if(mouseOff === conn.source) {
         let element = this.refs[conn.target]
-        element.classList.remove("bindText")
+        if (typeof element !== 'undefined') element.classList.remove("bindText")
       }
       else if (mouseOff === conn.target) {
         let element = this.refs[conn.source]
-        element.classList.remove("bindText")
+        if (typeof element !== 'undefined') element.classList.remove("bindText")
       }
     })
+  }
+
+
+  selectNode = (event, node) => {
+   if (!node) return
+
+   this.deSelectNode(null, this.state.selNode)
+
+   this.zoomToNode(event.target)
+
+   connections.forEach(conn => {
+      const target = this.refs[conn.target]
+      const source = this.refs[conn.source]
+
+      if (node.id === conn.source && node.label === 'source') {
+        if (typeof source !== 'undefined') source.classList.add('manualHover')
+        if (typeof target !== 'undefined') target.classList.add('bindText')
+        source.scrollIntoView()
+      }
+      else if (node.id === conn.target && node.label === 'target') {
+        if (typeof source !== 'undefined') source.classList.add('manualHover')
+        if (typeof target !== 'undefined') target.classList.add('bindText')
+        target.scrollIntoView()
+      }
+    })
+
+    this.setState({selNode: node})
+  }
+
+  deSelectNode = (event, node) => {
+   if (!node) return
+
+   this.resetZoom()
+
+   connections.forEach(conn => {
+      const target = this.refs[conn.target]
+      const source = this.refs[conn.source]
+
+      if (node.id === conn.source && node.label === 'source') {
+        if (typeof source !== 'undefined') source.classList.remove('manualHover')
+        if (typeof target !== 'undefined') target.classList.remove('bindText')
+      }
+      else if (node.id === conn.target && node.label === 'target') {
+        if (typeof source !== 'undefined') source.classList.remove('manualHover')
+        if (typeof target !== 'undefined') target.classList.remove('bindText')
+      }
+    })
+
+    this.setState({selNode: null})
+
+  }
+
+  zoomToNode = target => {
+    const g = document.getElementsByTagName('g')[1]
+    const r = document.getElementsByTagName('rect')[0]
+    const t = document.getElementsByTagName('text')
+
+    const x = target.cx.baseVal ? target.cx.baseVal.value : target.cx
+    const y = target.cy.baseVal ? target.cy.baseVal.value : target.cy
+
+    const w_w = document.getElementById("graph-container").offsetWidth
+    const w_h = document.getElementById("graph-container").offsetHeight
+
+    const set_x = w_w/2 - 2*x
+    const set_y = w_h/2 - 2*y
+    const m = "matrix(2 0 0 2 " + set_x + " " + set_y + ")"
+
+    g.setAttribute("transform", m)
+    r.setAttribute("x", set_x)
+    r.setAttribute("y", set_y)
+    r.setAttribute("transform", "scale(0.4)")
+
+    for (let i = 0; i < t.length; i++) {
+      t[i].setAttribute("font-size", 5)
+    }
+  }
+
+  resetZoom = () => {
+    const g = document.getElementsByTagName('g')[1]
+    const r = document.getElementsByTagName('rect')[0]
+    const t = document.getElementsByTagName('text')
+
+    const m = "matrix(1 0 0 1 0 0)"
+
+    g.setAttribute("transform", m)
+    r.setAttribute("x", 0)
+    r.setAttribute("y", 0)
+    r.setAttribute("transform", "scale(1)")
+
+    for (let i = 0; i < t.length; i++) {
+      t[i].setAttribute("font-size", 10)
+    }
   }
 
   recHighlight = (text, mentions) => {
@@ -86,6 +184,7 @@ class Result extends Component {
         {this.recHighlight(text.substring(0, nextMention[0]), mentions)}
         <span
           className={"markedText"}
+          id={text.substring(nextMention[0], nextMention[1]+1)}
           style={{display: 'inline'}}
           onMouseEnter={this.hoverOn}
           onMouseLeave={this.hoverOff}
@@ -158,21 +257,22 @@ class Result extends Component {
     let forceGraphNodes = []
     for (let i = 0; i<uniqueNodes.length; i++) {
       let color = uniqueNodes[i].label === "source" ? "deepskyblue" : "orangered"
-      forceGraphNodes.push(<ForceGraphNode node={uniqueNodes[i]} fill={color} />)
+      forceGraphNodes.push(<ForceGraphNode key={"node_"+i} node={uniqueNodes[i]} fill={color} ref={"node_"+uniqueNodes[i].id} />)
     }
 
     let forceGraphLinks = []
     for (let i = 0; i<uniqueLinks.length; i++) {
-      forceGraphLinks.push(<ForceGraphArrowLink link={uniqueLinks[i]} />)
+      forceGraphLinks.push(<ForceGraphArrowLink key={"link_"+i} link={uniqueLinks[i]} />)
     }
 
     return  <InteractiveForceGraph
-              simulationOptions={{ height: 500, width: 800, alpha: 1,strength: {
+              simulationOptions={{ height: 800, width: 800, strength: {
                   charge: -200
                 } }}
               labelAttr="id"
               showLabels
-              onSelectNode={(node) => console.log(node)}
+              onSelectNode={(event, node) => this.selectNode(event, node)}
+              onDeselectNode={(event, node) => this.deSelectNode(event, node)}
               highlightDependencies
               zoomOptions={{ minScale: 0.1, maxScale: 5 }}
               zoom
@@ -202,7 +302,7 @@ class Result extends Component {
             <Typography variant="h5" className={classes.title}>
               Graph of relations
             </Typography>
-            <Paper className={classes.paper} elevation={1}>
+            <Paper className={classes.paper} elevation={1} id = "graph-container">
               {this.generateGraphRelations(json)}
             </Paper>
           </Grid>
